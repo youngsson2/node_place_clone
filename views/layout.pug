@@ -1,0 +1,61 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(http-equiv="X-UA-Compatible", content="IE=edge")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        title= title || '장소 검색 서비스'
+        link(rel="stylesheet" href='/main.css')
+    body 
+        form#search-form(method='get')
+            span 장소 검색 서비스
+            input#search(type="text")
+            button#search-btn.btn 검색
+            ul#search-list
+        block content 
+        script. 
+            let timer;
+            document.querySelector('#search').addEventListener('keyup', (e) => {
+                let xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === xhr.DONE) {
+                        if (xhr.status === 200) {
+                            let predictions = JSON.parse(xhr.responseText);
+                            let ul = document.querySelector('#search-list');
+                            ul.innerHTML = '';
+                            predictions.forEach((pred) => {
+                                let li = document.createElement('li');
+                                li.textContent = pred.terms[0].value;
+                                li.onclick = () => {
+                                    location.href = '/search/' + pred.terms[0].value;
+                                }
+                                ul.appendChild(li);
+                            });
+                        } else {
+                            console.error(xhr.responseText);
+                        }
+                    }
+                };
+                let query = document.querySelector('#search').value;
+                if (timer) {
+                    clearTimeout(timer);
+                }
+                timer = setTimeout(() => {
+                    if (query) {
+                        xhr.open('GET', '/autoComplete/' + query);
+                        xhr.send();
+                    }
+                }, 200)
+            });
+            document.querySelector('#search-form').addEventListener('submit', () => {
+                e.preventDefault();
+                let searchForm = document.querySelector('#search-form');
+
+                if (!searchForm.search.value || !searchForm.search.value.trim()) {
+                    searchForm.search.focus();
+                    return false;
+                }
+
+                searchForm.action = '/search/' + searchInput.value.trim();
+                return searchForm.submit();
+            });
