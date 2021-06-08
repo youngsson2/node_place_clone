@@ -22,16 +22,45 @@ block content
                     center: center
                 });
                 positions.forEach((pos) => {
-                    new google.maps.Marker({
+                    let marker = new google.maps.Marker({
                         position: { lat: pos.lat, lng: pos.lng },
                         map: map,
                         title: pos.name
+                    });
+                    let div = document.createElement('div');
+                    let h1 = document.createElement('h1');
+                    let button = document.createElement('button');
+                    h1.textContent = pos.name;
+                    button.classList.add('btn');
+                    button.textContent = '즐겨찾기 추가';
+                    button.onclick = () => {
+                        let xhr = new XMLHttpRequest();
+                        xhr.onload = () => {
+                            if (xhr.status === 200) {
+                                location.href = '/';
+                            }
+                        };
+                        xhr.open('POST', `/location/${pos.id}/favorite`);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                        xhr.send(JSON.stringify({
+                            name: pos.name,
+                            lat: pos.lat,
+                            lng: pos.lng
+                        }));
+                    }
+                    div.appendChild(h1);
+                    div.appendChild(button);
+                    let infoWindow = new google.maps.InfoWindow({
+                        content: div
+                    });
+                    marker.addListener('click', (e) => {
+                        infoWindow.open(map, marker);
                     });
                 });
             }
         script(
             async 
             defer
-            src="https://maps.googleapis.com/maps/api/js"+ "?key=AIzaSyD_kqY04ThbQJ31owEowoG3seNpJLYIdNM&callback=initMap"
+            src="https://maps.googleapis.com/maps/api/js" + "?key=AIzaSyD_kqY04ThbQJ31owEowoG3seNpJLYIdNM&callback=initMap"
         )
 

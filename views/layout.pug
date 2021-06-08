@@ -10,7 +10,14 @@ html(lang="en")
         form#search-form(method='get')
             span 장소 검색 서비스
             input#search(type="text")
-            button#search-btn.btn 검색
+            select#type
+                option(value='') 없음
+                option(value='cafe') 카페
+                option(value='store') 상점
+                option(value='bank') 은행
+                option(value='school') 학교
+            button#search-btn.btn(type="submit") 검색
+            button#loc-search-btn.btn(type="button") 주변 검색
             ul#search-list
         block content 
         script. 
@@ -47,15 +54,45 @@ html(lang="en")
                     }
                 }, 200)
             });
-            document.querySelector('#search-form').addEventListener('submit', () => {
+            document.querySelector('#search-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                let searchForm = document.querySelector('#search-form');
+                const searchForm = document.querySelector('#search-form');
 
                 if (!searchForm.search.value || !searchForm.search.value.trim()) {
-                    searchForm.search.focus();
+                    searchInput.focus();
                     return false;
                 }
 
-                searchForm.action = '/search/' + searchInput.value.trim();
+                if (searchForm.type.value) {
+                    return location.href = `/search/${searchForm.search.value.trim()}?type=${searchForm.type.value}`;
+                }
+
+                searchForm.action = '/search/' + searchForm.search.value.trim();
                 return searchForm.submit();
+            });
+            document.querySelector('#loc-search-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (navigator.geolocation) {    // GPS 를 지원하면
+                    // navigator.geolocation.getCurrentPosition(success, error, options);
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        let search = document.querySelector('#search');
+                        let type = document.querySelector('#type').value;
+                        if (!search.value || !search.value.trim()) {
+                            search.focus();
+                            return false;
+                        }
+                        let lat = position.coords.latitude;
+                        let lng = position.coords.longitude;
+                        location.href = `/search/${search.value.trim()}?lat=${lat}&lng=${lng}&type=${type}`;
+                    }, (err) => {
+                        console.error(err);
+                        alert('내 위치 확인 권한을 허용하세요');
+                    }, {
+                        enableHighAccuracy: false,
+                        maximumAge: 0,
+                        timeout: Infinity
+                    });
+                } else {
+                    alert('GPS를 지원하지 않습니다.');
+                }
             });
